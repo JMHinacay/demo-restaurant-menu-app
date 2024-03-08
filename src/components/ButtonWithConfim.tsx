@@ -11,7 +11,10 @@ function ButtonWithConfim(props: any) {
         <Modal
           title={props?.title}
           content={props?.content}
-          onConfirm={(e: any) => props.onClick(e)}
+          onConfirm={(e: any) => {
+            props.onClick(e);
+            setVisible(false);
+          }}
           onCancel={() => setVisible(false)}
         />
       )}

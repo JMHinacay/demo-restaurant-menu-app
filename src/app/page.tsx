@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import {
   AiOutlineDelete,
   AiOutlineEdit,
+  AiOutlineEye,
+  AiOutlineEyeInvisible,
   AiOutlinePlusCircle,
   AiOutlineSave,
 } from "react-icons/ai";
@@ -24,6 +26,8 @@ export default function Home() {
     {
       isEditing,
       setIsEditing,
+      editableCell,
+      setEditableCell,
       editableRow,
       render,
       handleEditRow,
@@ -34,82 +38,14 @@ export default function Home() {
     rowChangeCallBack: () => {},
     categories,
   });
+  const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
-  const columns: ColumnT<MenuItem>[] = [
-    {
-      dataIndex: "name",
-      title: "Name",
-      render: render("name", "text"),
-    },
-    {
-      dataIndex: "category",
-      title: "Category",
-      render: render("category", "text"),
-    },
-    {
-      dataIndex: "options",
-      title: "Options",
-      render: render("options", "select", []),
-    },
-    {
-      dataIndex: "price",
-      title: "Price",
-      render: render("price", "number", true),
-      width: "150px",
-    },
-    {
-      dataIndex: "cost",
-      title: "Cost",
-      render: render("cost", "number", true),
-      width: "150px",
-    },
-    {
-      dataIndex: "qty",
-      title: "Quantity",
-      render: render("qty", "number"),
-      width: "150px",
-    },
-    {
-      dataIndex: "id",
-      title: "Actions",
-      width: "105px",
-      render: (id, record) => {
-        return (
-          <>
-            <Button
-              type="primary"
-              icon={record?.isEditable ? <AiOutlineSave /> : <AiOutlineEdit />}
-              onClick={() =>
-                record?.isEditable ? submitMenuItem() : handleEditRow(record)
-              }
-              disabled={isEditing && !record?.isEditable}
-            />
-            {record?.isEditable && (
-              <Button
-                type="danger"
-                icon={<MdOutlineCancel />}
-                onClick={() => handleCancelEdit()}
-                disabled={isEditing && !record?.isEditable}
-              />
-            )}
-            {!record?.isEditable && (
-              <ButtonWithConfim
-                type="danger"
-                icon={<AiOutlineDelete />}
-                disabled={isEditing && !record?.isEditable}
-                onClick={() => {
-                  handleDeleteItem(id);
-                }}
-                title="Confirm delete item."
-                content="Are you sure you want to delete this item?"
-              />
-            )}
-          </>
-        );
-      },
-    },
-  ];
-
+  const handleClickExpand = (id: string, type: "open" | "close") => {
+    if (type === "open") setExpandedRows([...expandedRows, id]);
+    else if (type === "close") {
+      setExpandedRows(expandedRows?.filter((item) => item !== id));
+    }
+  };
   const submitMenuItem = async () => {
     let data = { ...editableRow };
     delete data.isEditable;
@@ -127,6 +63,20 @@ export default function Home() {
     }
     fetchMenuItems();
     setIsEditing(false);
+    setEditableCell(false);
+  };
+
+  const handleSaveCell = async () => {
+    await writeData<MenuItem>(
+      `menu/items/${editableCell?.id}/${editableCell?.key}`,
+      editableCell?.value,
+      async () => {
+        alert("Menu item successfully saved!");
+        fetchMenuItems();
+        setIsEditing(false);
+        setEditableCell(false);
+      }
+    );
   };
 
   const fetchMenuItems = async () => {
@@ -153,10 +103,121 @@ export default function Home() {
     setCategories(arr);
   }, [dataSource]);
 
+  const expandedColumns: ColumnT<any>[] = [
+    // { dataIndex: "", title: "", width: "80%" },
+    { dataIndex: "name", title: "Name" },
+    { dataIndex: "additionalCost", title: "Additional Cost" },
+  ];
+
+  const columns: ColumnT<MenuItem>[] = [
+    {
+      dataIndex: "name",
+      title: "Name",
+      render: render("name", "text"),
+    },
+    {
+      dataIndex: "category",
+      title: "Category",
+      render: render("category", "text"),
+    },
+    {
+      dataIndex: "price",
+      title: "Price",
+      render: render("price", "number", true),
+      width: "150px",
+    },
+    {
+      dataIndex: "cost",
+      title: "Cost",
+      render: render("cost", "number", true),
+      width: "150px",
+    },
+    {
+      dataIndex: "qty",
+      title: "Quantity",
+      render: render("qty", "number"),
+      width: "150px",
+    },
+    {
+      dataIndex: "id",
+      title: "Actions",
+      width: "170px",
+      render: (id, record) => {
+        const expanded = expandedRows?.includes(id);
+        return (
+          <>
+            <Button
+              type="primary"
+              icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+              onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
+              disabled={isEditing && !record?.isEditable}
+            />
+            <Button
+              type="primary"
+              icon={
+                record?.isEditable || editableCell?.id === id ? (
+                  <AiOutlineSave />
+                ) : (
+                  <AiOutlineEdit />
+                )
+              }
+              onClick={() => {
+                if (record?.isEditable) {
+                  submitMenuItem();
+                } else if (editableCell && editableCell?.id === id) {
+                  handleSaveCell();
+                } else {
+                  handleEditRow(record);
+                }
+              }}
+              disabled={
+                isEditing && !record?.isEditable && editableCell?.id !== id
+              }
+            />
+            {record?.isEditable && (
+              <Button
+                type="danger"
+                icon={<MdOutlineCancel />}
+                onClick={() => handleCancelEdit()}
+                disabled={isEditing && !record?.isEditable}
+              />
+            )}
+            {!record?.isEditable && (
+              <ButtonWithConfim
+                type="danger"
+                icon={<AiOutlineDelete />}
+                disabled={isEditing && !record?.isEditable}
+                onClick={() => {
+                  handleDeleteItem(id);
+                }}
+                title="Confirm delete item."
+                content="Are you sure you want to delete this item?"
+              />
+            )}
+          </>
+        );
+      },
+    },
+  ];
   return (
     <main className="flex min-h-screen flex-col  justify-between p-10">
       <div>
-        <Table dataSource={dataSource} columns={columns} />
+        <Table
+          dataSource={dataSource}
+          columns={columns}
+          expandedRows={expandedRows}
+          expandedRowRender={(record: MenuItem) => {
+            return (
+              <>
+                <div className="font-bold"> {record?.name} Options</div>
+                <Table
+                  columns={expandedColumns}
+                  dataSource={record?.options || []}
+                />
+              </>
+            );
+          }}
+        />
         <Button
           disabled={isEditing}
           dashed
@@ -173,7 +234,7 @@ export default function Home() {
 const initialValues = {
   name: "",
   category: "",
-  options: "",
+  options: [],
   price: 0,
   cost: 0,
   qty: 0,

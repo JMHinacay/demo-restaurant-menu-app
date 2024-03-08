@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 export type MenuItem = {
   name: string;
   category: string;
-  options: string;
+  options: object[];
   price: number;
   cost: number;
   qty: number;
@@ -19,8 +19,10 @@ export type MenuItemKeys =
   | "qty";
 
 export type ColumnT<Type> = {
+  key?: string;
+  colSpan?: number | undefined;
   dataIndex: string;
   title: string;
   width?: string | number;
-  render: (value: string, record: Type) => ReactNode;
+  render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
 };
