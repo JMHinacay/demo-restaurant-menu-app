@@ -4,17 +4,17 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255; */
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 0, 0, 0;
     --background-end-rgb: 0, 0, 0;
   }
-}
+} */
 
 body {
   color: rgb(var(--foreground-rgb));
@@ -24,10 +24,33 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  font-family: "Open Sans", sans-serif;
+  font-size: 15px;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+table.unstyledTable {
+  @apply border-y-[#cfcfcf] border-t border-solid border-b text-[#5e5d5d] text-left w-[100%];
+}
+
+table.unstyledTable td,
+table.unstyledTable th {
+  @apply px-3 py-[5px] border-b-[#e4e4e4] border-b border-solid;
+}
+
+table.unstyledTable th {
+  @apply bg-[#f5f3f3];
+}
+
+input.editableInput,
+select.editableInput {
+  @apply appearance-none block  text-gray-700 border border-gray-200 px-[2px]   focus:outline-none focus:bg-white focus:border-blue-200;
+}
+input.defaultInput {
+  @apply appearance-none focus:outline-none border border-white px-[2px]  w-auto;
 }

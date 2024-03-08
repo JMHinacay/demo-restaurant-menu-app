@@ -1,113 +1,186 @@
-import Image from "next/image";
+"use client";
+import Button from "@/components/Button";
+import ButtonWithConfim from "@/components/ButtonWithConfim";
+import Table from "@/components/Table";
+import useEditableDataSource from "@/hooks/useEditableDataSource";
+import useFireBase from "@/hooks/useFireBase";
+import { useEffect, useState } from "react";
+import {
+  AiOutlineDelete,
+  AiOutlineEdit,
+  AiOutlinePlusCircle,
+  AiOutlineSave,
+} from "react-icons/ai";
+import { MdOutlineCancel } from "react-icons/md";
+import { uuid } from "uuidv4";
+import { ColumnT, MenuItem } from "./types/types";
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+  const [readData, writeData, updateData, loading] = useFireBase();
+  const [categories, setCategories] = useState<string[]>([]);
+  const [
+    dataSource,
+    setDataSource,
+    {
+      isEditing,
+      setIsEditing,
+      editableRow,
+      render,
+      handleEditRow,
+      handleAddRow,
+    },
+  ] = useEditableDataSource({
+    initialValues,
+    rowChangeCallBack: () => {},
+    categories,
+  });
+
+  const columns: ColumnT<MenuItem>[] = [
+    {
+      dataIndex: "name",
+      title: "Name",
+      render: render("name", "text"),
+    },
+    {
+      dataIndex: "category",
+      title: "Category",
+      render: render("category", "text"),
+    },
+    {
+      dataIndex: "options",
+      title: "Options",
+      render: render("options", "select", []),
+    },
+    {
+      dataIndex: "price",
+      title: "Price",
+      render: render("price", "number", true),
+      width: "150px",
+    },
+    {
+      dataIndex: "cost",
+      title: "Cost",
+      render: render("cost", "number", true),
+      width: "150px",
+    },
+    {
+      dataIndex: "qty",
+      title: "Quantity",
+      render: render("qty", "number"),
+      width: "150px",
+    },
+    {
+      dataIndex: "id",
+      title: "Actions",
+      width: "105px",
+      render: (id, record) => {
+        return (
+          <>
+            <Button
+              type="primary"
+              icon={record?.isEditable ? <AiOutlineSave /> : <AiOutlineEdit />}
+              onClick={() =>
+                record?.isEditable ? submitMenuItem() : handleEditRow(record)
+              }
+              disabled={isEditing && !record?.isEditable}
             />
-          </a>
-        </div>
-      </div>
+            {record?.isEditable && (
+              <Button
+                type="danger"
+                icon={<MdOutlineCancel />}
+                onClick={() => handleCancelEdit()}
+                disabled={isEditing && !record?.isEditable}
+              />
+            )}
+            {!record?.isEditable && (
+              <ButtonWithConfim
+                type="danger"
+                icon={<AiOutlineDelete />}
+                disabled={isEditing && !record?.isEditable}
+                onClick={() => {
+                  handleDeleteItem(id);
+                }}
+                title="Confirm delete item."
+                content="Are you sure you want to delete this item?"
+              />
+            )}
+          </>
+        );
+      },
+    },
+  ];
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+  const submitMenuItem = async () => {
+    let data = { ...editableRow };
+    delete data.isEditable;
+    data.category = removeExtraSpaces(data.category);
+    if (data?.id) {
+      let obj: any = {};
+      obj[`menu/items/${data?.id}`] = data;
+      await updateData(obj, () => {
+        alert("Menu item successfully updated!");
+      });
+    } else {
+      await writeData<MenuItem>(`menu/items/${uuid()}`, data, () => {
+        alert("Menu item successfully saved!");
+      });
+    }
+    fetchMenuItems();
+    setIsEditing(false);
+  };
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+  const fetchMenuItems = async () => {
+    const data = await readData("menu/items");
+    setDataSource(data);
+  };
+
+  const handleCancelEdit = () => {
+    fetchMenuItems();
+    setIsEditing(false);
+  };
+  const handleDeleteItem = async (id: string) => {
+    await writeData<null>(`menu/items/${id}`, null, () => {
+      alert("Menu item successfully deleted!");
+      fetchMenuItems();
+    });
+  };
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  useEffect(() => {
+    const arr = Array.from(new Set(dataSource?.map((item) => item.category)));
+    setCategories(arr);
+  }, [dataSource]);
+
+  return (
+    <main className="flex min-h-screen flex-col  justify-between p-10">
+      <div>
+        <Table dataSource={dataSource} columns={columns} />
+        <Button
+          disabled={isEditing}
+          dashed
+          onClick={() => handleAddRow()}
+          fullWidth
+          icon={<AiOutlinePlusCircle />}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          Add Item
+        </Button>
       </div>
     </main>
   );
+}
+const initialValues = {
+  name: "",
+  category: "",
+  options: "",
+  price: 0,
+  cost: 0,
+  qty: 0,
+  id: null,
+};
+function removeExtraSpaces(str: string) {
+  str = str.trim();
+  str = str.replace(/\s{2,}/g, " ");
+  return str;
 }
