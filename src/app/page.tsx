@@ -150,7 +150,7 @@ export default function Home() {
               type="primary"
               icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
               onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
-              disabled={isEditing && !record?.isEditable}
+              disabled={loading || (isEditing && !record?.isEditable)}
             />
             <Button
               type="primary"
@@ -171,7 +171,8 @@ export default function Home() {
                 }
               }}
               disabled={
-                isEditing && !record?.isEditable && editableCell?.id !== id
+                loading ||
+                (isEditing && !record?.isEditable && editableCell?.id !== id)
               }
             />
             {record?.isEditable && (
@@ -179,14 +180,14 @@ export default function Home() {
                 type="danger"
                 icon={<MdOutlineCancel />}
                 onClick={() => handleCancelEdit()}
-                disabled={isEditing && !record?.isEditable}
+                disabled={loading || (isEditing && !record?.isEditable)}
               />
             )}
             {!record?.isEditable && (
               <ButtonWithConfim
                 type="danger"
                 icon={<AiOutlineDelete />}
-                disabled={isEditing && !record?.isEditable}
+                disabled={loading || (isEditing && !record?.isEditable)}
                 onClick={() => {
                   handleDeleteItem(id);
                 }}
@@ -217,6 +218,7 @@ export default function Home() {
               </>
             );
           }}
+          loading={loading}
         />
         <Button
           disabled={isEditing}

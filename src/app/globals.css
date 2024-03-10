@@ -54,3 +54,12 @@ select.editableInput {
 input.defaultInput {
   @apply appearance-none focus:outline-none border border-white px-[2px]  w-auto;
 }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

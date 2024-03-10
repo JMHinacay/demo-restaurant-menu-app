@@ -41,6 +41,7 @@ function useFireBase(): FirebaseHookReturnType {
   };
 
   const updateData: UpdateDataFunction = async (value, callback) => {
+    setLoading(true);
     return update(ref(database), value)
       .then(() => {
         if (callback) callback();
