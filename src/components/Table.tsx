@@ -37,7 +37,7 @@ function Table({
           {!dataSource || dataSource?.length <= 0 ? (
             <tr>
               <td
-                height={200}
+                height={120}
                 colSpan={columns?.length}
                 className="text-center text-gray-300"
               ></td>

@@ -63,7 +63,7 @@ export default function Home() {
     }
     fetchMenuItems();
     setIsEditing(false);
-    setEditableCell(false);
+    setEditableCell(null);
   };
 
   const handleSaveCell = async () => {
@@ -74,7 +74,7 @@ export default function Home() {
         alert("Menu item successfully saved!");
         fetchMenuItems();
         setIsEditing(false);
-        setEditableCell(false);
+        setEditableCell(null);
       }
     );
   };

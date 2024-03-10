@@ -40,7 +40,7 @@ const Input: React.FC<PropsWithChildren<CombinedProps>> = ({
         <div
           id="fix_width"
           style={{ width: inputWidth }}
-          className="absolute block shadow-lg bg-white min-w-6 z-1 p-1"
+          className="absolute block shadow-lg bg-white min-w-6 z-50 p-1"
           onMouseOver={() => {
             setHovered(true);
           }}

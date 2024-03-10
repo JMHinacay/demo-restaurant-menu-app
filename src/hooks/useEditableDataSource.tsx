@@ -1,31 +1,53 @@
-import { MenuItem, MenuItemKeys } from "@/app/types/types";
+import { useState } from "react";
 import Input from "@/components/Input";
 import NumeralFormatter from "@/components/NumeralFormatter";
-import Select from "@/components/Select";
-import React, { useState } from "react";
+import { MenuItem, MenuItemKeys } from "@/app/types/types";
+
 const inputStyle = { margin: 0, width: "100%" };
 
-type UseEditableDataSourceT = {
+type RowChangeCallBackT = (value: string | number, key: string) => void;
+
+interface UseEditableDataSourceT {
   initialValues: MenuItem;
   rowChangeCallBack: RowChangeCallBackT;
   categories: string[];
-};
+}
 
-type EditableCellT = {
+interface EditableCellT {
   id: string;
   key: string;
   value: any;
-};
-type RowChangeCallBackT = (value: string | number, key: string) => void;
+}
+
 function useEditableDataSource({
   initialValues,
   rowChangeCallBack,
   categories,
-}: UseEditableDataSourceT) {
+}: UseEditableDataSourceT): [
+  MenuItem[],
+  (data: MenuItem[]) => void,
+  {
+    isEditing: boolean;
+    setIsEditing: (editing: boolean) => void;
+    editableCell: EditableCellT | null;
+    setEditableCell: (cell: EditableCellT | null) => void;
+    editableRow: MenuItem;
+    setEditableRow: (row: MenuItem) => void;
+    render: (
+      key: MenuItemKeys,
+      inputType: string,
+      formatNumber?: boolean
+    ) => any;
+    handleEditRow: (record: MenuItem) => void;
+    handleAddRow: () => void;
+    handleChange: RowChangeCallBackT;
+  }
+] {
   const [editableRow, setEditableRow] = useState<MenuItem>(initialValues);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<MenuItem[]>([]);
-  const [editableCell, setEditableCell] = useState<EditableCellT | null>();
+  const [editableCell, setEditableCell] = useState<EditableCellT | null>(null);
+
   const handleEditRow = (record: MenuItem) => {
     setIsEditing(true);
     const arr = dataSource.map((item) =>
@@ -58,15 +80,17 @@ function useEditableDataSource({
   };
 
   const handleClickCell = (id: string, key: string, value: any) => {
-    setIsEditing(true);
-    if (!editableCell) {
+    if (!editableCell && !isEditing) {
+      setIsEditing(true);
+
       setEditableCell({ id, key, value });
     }
   };
+
   const render = (
     key: MenuItemKeys,
     inputType: string,
-    formatNumber: boolean
+    formatNumber?: boolean
   ) => {
     const func = (val: string | number, record: any) => {
       let isEditable =
@@ -75,7 +99,7 @@ function useEditableDataSource({
 
       if (!isEditable)
         return (
-          <div onClick={() => handleClickCell(record.id, key, val)}>
+          <div onClick={() => handleClickCell(record.id as string, key, val)}>
             {formatNumber && inputType === "number" ? (
               <NumeralFormatter withPesos={true} value={val} />
             ) : (
@@ -116,7 +140,7 @@ function useEditableDataSource({
     return func;
   };
 
-  const returnVal: HookReturn = [
+  return [
     dataSource,
     setDataSource,
     {
@@ -132,19 +156,6 @@ function useEditableDataSource({
       handleChange,
     },
   ];
-  return returnVal;
 }
-type ObjOjb = {
-  isEditing: boolean;
-  setIsEditing: any;
-  editableCell: any;
-  setEditableCell: any;
-  editableRow: any;
-  setEditableRow: any;
-  render: any;
-  handleEditRow: (record: MenuItem) => void;
-  handleAddRow: any;
-  handleChange: any;
-};
-type HookReturn = [MenuItem[], (any: any) => void, obj: ObjOjb];
+
 export default useEditableDataSource;
