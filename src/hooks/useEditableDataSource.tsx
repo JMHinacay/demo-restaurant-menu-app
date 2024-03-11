@@ -6,9 +6,16 @@ const inputStyle = { margin: 0, width: "100%" };
 
 type RowChangeCallBackT<T> = (value: string | number, key: keyof T) => void;
 
+type HandleClickCell<T> = (
+  id: string,
+  key: keyof T,
+  value: any,
+  record: T
+) => void;
+
 interface UseEditableDataSourceT<T> {
   initialValues: T;
-  rowChangeCallBack: RowChangeCallBackT<T>;
+  handleClickCell: HandleClickCell<T>;
 }
 
 interface EditableCellT<T> {
@@ -27,7 +34,7 @@ export interface RenderOptions<T> {
 
 function useEditableDataSource<T>({
   initialValues,
-  rowChangeCallBack,
+  handleClickCell,
 }: UseEditableDataSourceT<T>): [
   T[],
   (data: T[]) => void,
@@ -66,10 +73,6 @@ function useEditableDataSource<T>({
     } else {
       setEditableRow({ ...editableRow, [key]: value ? value : null });
     }
-
-    if (rowChangeCallBack) {
-      rowChangeCallBack(value, key);
-    }
   };
 
   const handleAddRow = () => {
@@ -82,12 +85,12 @@ function useEditableDataSource<T>({
     setIsEditing(true);
   };
 
-  const handleClickCell = (id: string, key: keyof T, value: any, record: T) => {
-    if (!editableCell && !isEditing) {
-      setIsEditing(true);
-      setEditableCell({ id, key, value, record });
-    }
-  };
+  // const handleClickCell = (id: string, key: keyof T, value: any, record: T) => {
+  //   if (!editableCell && !isEditing) {
+  //     setIsEditing(true);
+  //     setEditableCell({ id, key, value, record });
+  //   }
+  // };
 
   const render = ({
     key,
@@ -138,7 +141,7 @@ function useEditableDataSource<T>({
               <Input
                 type="text"
                 {...inputProps}
-                options={
+                autoCompleteList={
                   key === "category" ? (categories as string[]) : undefined
                 }
               />

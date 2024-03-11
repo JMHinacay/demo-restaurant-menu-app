@@ -66,6 +66,7 @@ export default function Home() {
     const data = await readData("menu/items");
     setFilteredDataSource(data);
     setDataSource(data);
+    setIsEditing(false);
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -97,7 +98,16 @@ export default function Home() {
       }
     );
   };
-  const handleDeleteOption = async (id: string) => {};
+  const handleDeleteOption = async (id: string, record: any) => {
+    await writeData<null>(
+      `menu/items/${record?.menuItemId}/options/${id}`,
+      null,
+      () => {
+        alert("Menu item successfully deleted!");
+        fetchMenuItems();
+      }
+    );
+  };
   useEffect(() => {
     fetchMenuItems();
   }, []);
@@ -178,6 +188,7 @@ export default function Home() {
       },
     },
   ];
+  const [isEditing, setIsEditing] = useState<boolean>(false);
   return (
     <main className="flex min-h-screen flex-col  justify-between p-10">
       <div>
@@ -207,7 +218,10 @@ export default function Home() {
           addButtonText="New Menu Item"
           onSaveRow={submitMenuItem}
           onSaveCell={handleSaveMenuItemCell}
+          onEdit={() => setIsEditing(true)}
+          onCancelEdit={() => setIsEditing(false)}
           onDeleteRow={handleDeleteItem}
+          disabled={isEditing}
           expandedRowRender={(record: MenuItem) => {
             return (
               <div className="ml-[50px]">
@@ -219,6 +233,8 @@ export default function Home() {
                     menuItemId: record?.id,
                   }}
                   columns={expandedColumns}
+                  onEdit={() => setIsEditing(true)}
+                  onCancelEdit={() => setIsEditing(false)}
                   dataSource={
                     record?.options
                       ? Object?.keys(record?.options).map((key) => ({
@@ -230,6 +246,7 @@ export default function Home() {
                         }))
                       : []
                   }
+                  disabled={isEditing}
                   addButtonText={`New ${record?.name} Option`}
                   onSaveRow={handleSaveOption}
                   onSaveCell={handleSaveOptionCell}

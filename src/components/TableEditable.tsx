@@ -16,27 +16,31 @@ import { MdOutlineCancel } from "react-icons/md";
 interface TableEditableProps<T> {
   onSaveRow: (data: T) => void;
   onSaveCell: (cell: any) => void;
-  onDeleteRow: (id: string) => void;
-  handleCancelEdit?: () => void;
+  onDeleteRow: (id: string, record?: T) => void;
+  onEdit?: () => void;
+  onCancelEdit?: () => void;
   dataSource: T[];
   columns: any[];
   loading: boolean;
   expandedRowRender: any;
   initialValues: T;
   addButtonText?: string;
+  disabled?: boolean;
 }
 
 export default function TableEditable<T>({
   onSaveRow,
   onSaveCell,
   onDeleteRow,
-  handleCancelEdit,
+  onEdit,
+  onCancelEdit,
   dataSource: dataSourceRaw,
   columns,
   loading,
   expandedRowRender,
   initialValues,
   addButtonText = "Add Row",
+  disabled = false,
 }: TableEditableProps<T>) {
   const [
     dataSource,
@@ -53,13 +57,19 @@ export default function TableEditable<T>({
     },
   ] = useEditableDataSource<T>({
     initialValues,
-    rowChangeCallBack: () => {},
+    handleClickCell: (id: string, key: keyof T, value: any, record: T) => {
+      if (!editableCell && !isEditing) {
+        setIsEditing(true);
+        setEditableCell({ id, key, value, record });
+        if (onEdit) onEdit();
+      }
+    },
   });
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
-  const onCancelEdit = () => {
+  const handleCancelEdit = () => {
     setDataSource([...dataSourceRaw]);
-    if (handleCancelEdit) handleCancelEdit();
+    if (onCancelEdit) onCancelEdit();
     setIsEditing(false);
     setEditableCell(null);
   };
@@ -90,22 +100,28 @@ export default function TableEditable<T>({
     }
   };
 
-  const handleDeleteRow = async (id: string) => {
-    onDeleteRow(id);
+  const handleDeleteRow = async (id: string, record?: T) => {
+    onDeleteRow(id, record);
   };
+
   const actionColumns: any = {
     dataIndex: "id",
     title: "Actions",
     width: "105px",
     render: (id: any, record: any) => {
       const expanded = expandedRows?.includes(id);
+
       return (
         <>
           <Button
             type="primary"
             icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
             onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
-            disabled={loading || (isEditing && !record?.isEditable)}
+            disabled={
+              loading ||
+              editableCell?.id === id ||
+              (disabled && !record?.isEditable)
+            }
           />
           <Button
             type="primary"
@@ -123,28 +139,37 @@ export default function TableEditable<T>({
                 handleSaveCell();
               } else {
                 handleEditRow(record);
+                if (onEdit) onEdit();
               }
             }}
             disabled={
               loading ||
-              (isEditing && !record?.isEditable && editableCell?.id !== id)
+              (disabled && !record?.isEditable && editableCell?.id !== id)
             }
           />
           {record?.isEditable && (
             <Button
               type="danger"
               icon={<MdOutlineCancel />}
-              onClick={() => onCancelEdit()}
-              disabled={loading || (isEditing && !record?.isEditable)}
+              onClick={() => handleCancelEdit()}
+              disabled={
+                loading ||
+                editableCell?.id === id ||
+                (disabled && !record?.isEditable)
+              }
             />
           )}
           {!record?.isEditable && (
             <ButtonWithConfim
               type="danger"
               icon={<AiOutlineDelete />}
-              disabled={loading || (isEditing && !record?.isEditable)}
+              disabled={
+                loading ||
+                editableCell?.id === id ||
+                (disabled && !record?.isEditable)
+              }
               onClick={() => {
-                handleDeleteRow(id);
+                handleDeleteRow(id, record);
               }}
               title="Confirm delete item."
               content="Are you sure you want to delete this item?"
