@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import ButtonWithConfim from "@/components/ButtonWithConfim";
 import Table from "@/components/Table";
-import useEditableDataSource, {
-  RenderOptions,
-} from "@/hooks/useEditableDataSource";
+import useEditableDataSource from "@/hooks/useEditableDataSource";
 import {
   AiOutlineDelete,
   AiOutlineEdit,

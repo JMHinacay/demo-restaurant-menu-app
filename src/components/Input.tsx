@@ -6,7 +6,7 @@ import React, {
 } from "react";
 
 const Input: React.FC<PropsWithChildren<CombinedProps>> = ({
-  autoCompleteList,
+  options,
   ...props
 }) => {
   const [focused, setFocused] = useState(false);
@@ -23,11 +23,10 @@ const Input: React.FC<PropsWithChildren<CombinedProps>> = ({
   const inputWidth = inputRef.current?.offsetWidth;
 
   return (
-    <div style={{ width: "100%", position: "relative" }}>
-      <span>
+    <div style={{ position: "relative" }}>
+      <div>
         <input
-          className={"editableInput"}
-          style={{ paddingLeft: 20 }}
+          className={"editableInput h-[30px]"}
           onFocus={() => setFocused(true)}
           onBlur={() => {
             if (!hovered) setFocused(false);
@@ -35,8 +34,8 @@ const Input: React.FC<PropsWithChildren<CombinedProps>> = ({
           ref={inputRef}
           {...props}
         />
-      </span>
-      {focused && autoCompleteList && (
+      </div>
+      {focused && options && (
         <div
           id="fix_width"
           style={{ width: inputWidth }}
@@ -49,7 +48,7 @@ const Input: React.FC<PropsWithChildren<CombinedProps>> = ({
           }}
         >
           <ul>
-            {autoCompleteList?.map((item, index) => (
+            {options?.map((item, index) => (
               <li
                 className="p-1 hover:bg-blue-400 hover:text-white"
                 key={index}
@@ -69,6 +68,6 @@ export default Input;
 
 interface AdditionalProps {
   isEditable?: boolean;
-  autoCompleteList?: string[];
+  options?: string[];
 }
 type CombinedProps = InputHTMLAttributes<HTMLInputElement> & AdditionalProps;

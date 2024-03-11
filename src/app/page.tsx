@@ -4,12 +4,40 @@ import useFireBase from "@/hooks/useFireBase";
 import { useEffect, useState } from "react";
 import { uuid } from "uuidv4";
 import { ColumnT, MenuItem, Option } from "./types/types";
-
+import Input from "@/components/Input";
+import Select from "@/components/Select";
+type Filters = {
+  search: string;
+  categories: string[];
+};
 export default function Home() {
   const [readData, writeData, updateData, loading] = useFireBase();
   const [categories, setCategories] = useState<string[]>([]);
+  const [filteredDataSource, setFilteredDataSource] = useState<MenuItem[]>([]);
   const [dataSource, setDataSource] = useState<MenuItem[]>([]);
+  const [filters, setFilters] = useState<Filters>({
+    search: "",
+    categories: [],
+  });
 
+  const handleSearch = () => {
+    setFilteredDataSource(
+      dataSource?.filter((item) => {
+        if (filters.categories.length === 0) {
+          return item.name.toLowerCase().includes(filters.search.toLowerCase());
+        }
+        return (
+          item.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+          filters.categories.includes(item.category)
+        );
+      })
+    );
+  };
+
+  useEffect(
+    () => handleSearch(),
+    [filters.search, filters.categories, dataSource]
+  );
   const submitMenuItem = async (rowData: any) => {
     let data = { ...rowData };
     data.category = removeExtraSpaces(data.category);
@@ -32,14 +60,15 @@ export default function Home() {
       `menu/items/${cellData?.id}/${cellData?.key}`,
       cellData?.value,
       async () => {
-        alert("Menu item successfully saved!");
         fetchMenuItems();
+        alert("Menu item successfully saved!");
       }
     );
   };
 
   const fetchMenuItems = async () => {
     const data = await readData("menu/items");
+    setFilteredDataSource(data);
     setDataSource(data);
   };
 
@@ -154,10 +183,27 @@ export default function Home() {
     <main className="flex min-h-screen flex-col  justify-between p-10">
       <div>
         <div className="text-xl font-bold mb-10">Restaurant Menu</div>
+        <div className="flex">
+          <div className="mb-4 mr-2">Search:</div>
+          <Input
+            onChange={(e) => {
+              console.log(e.target.value);
+              setFilters({ ...filters, search: e.target.value });
+            }}
+          />
+
+          <div className="mb-4 mr-2 ml-10">Categories:</div>
+          <Select
+            options={categories}
+            onChange={(value: string[]) => {
+              setFilters({ ...filters, categories: value as string[] });
+            }}
+          />
+        </div>
 
         <TableEditable
           initialValues={initialValues}
-          dataSource={dataSource}
+          dataSource={filteredDataSource}
           columns={columns}
           addButtonText="New Menu Item"
           onSaveRow={submitMenuItem}

@@ -138,7 +138,7 @@ function useEditableDataSource<T>({
               <Input
                 type="text"
                 {...inputProps}
-                autoCompleteList={
+                options={
                   key === "category" ? (categories as string[]) : undefined
                 }
               />
