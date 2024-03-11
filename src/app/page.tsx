@@ -36,6 +36,7 @@ export default function Home() {
 
   const submitMenuItem = async (rowData: any) => {
     let data = { ...rowData };
+    delete data.isEditable;
     data.category = removeExtraSpaces(data.category);
     if (data?.id) {
       let obj: any = {};
@@ -64,8 +65,8 @@ export default function Home() {
 
   const fetchMenuItems = async () => {
     const data = await readData("menu/items");
-    setFilteredDataSource(data);
-    setDataSource(data);
+    setFilteredDataSource(data || []);
+    setDataSource(data || []);
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -76,6 +77,7 @@ export default function Home() {
   };
 
   const handleSaveOption = async (rowData: any) => {
+    delete rowData.isEditable;
     await writeData<any>(
       `menu/items/${rowData?.menuItemId}/options/${rowData?.id || uuid()}`,
       rowData,
@@ -97,7 +99,18 @@ export default function Home() {
       }
     );
   };
-  const handleDeleteOption = async (id: string) => {};
+  const handleDeleteOption = async (id: string, record: any) => {
+    console.log(record);
+    await writeData<any>(
+      `menu/items/${record?.menuItemId}/options/${id}`,
+      null,
+      async () => {
+        alert(`Menu item option successfully deleted!`);
+        fetchMenuItems();
+      }
+    );
+  };
+
   useEffect(() => {
     fetchMenuItems();
   }, []);
@@ -208,6 +221,7 @@ export default function Home() {
           onSaveRow={submitMenuItem}
           onSaveCell={handleSaveMenuItemCell}
           onDeleteRow={handleDeleteItem}
+          loading={loading}
           expandedRowRender={(record: MenuItem) => {
             return (
               <div className="ml-[50px]">
@@ -234,13 +248,10 @@ export default function Home() {
                   onSaveRow={handleSaveOption}
                   onSaveCell={handleSaveOptionCell}
                   onDeleteRow={handleDeleteOption}
-                  loading={false}
-                  expandedRowRender={undefined}
                 />
               </div>
             );
           }}
-          loading={loading}
         />
       </div>
     </main>

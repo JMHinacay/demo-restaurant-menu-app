@@ -16,12 +16,12 @@ import { MdOutlineCancel } from "react-icons/md";
 interface TableEditableProps<T> {
   onSaveRow: (data: T) => void;
   onSaveCell: (cell: any) => void;
-  onDeleteRow: (id: string) => void;
+  onDeleteRow: (id: string, record: T) => void;
   handleCancelEdit?: () => void;
   dataSource: T[];
   columns: any[];
-  loading: boolean;
-  expandedRowRender: any;
+  loading?: boolean;
+  expandedRowRender?: any;
   initialValues: T;
   addButtonText?: string;
 }
@@ -33,7 +33,7 @@ export default function TableEditable<T>({
   handleCancelEdit,
   dataSource: dataSourceRaw,
   columns,
-  loading,
+  loading = false,
   expandedRowRender,
   initialValues,
   addButtonText = "Add Row",
@@ -90,8 +90,8 @@ export default function TableEditable<T>({
     }
   };
 
-  const handleDeleteRow = async (id: string) => {
-    onDeleteRow(id);
+  const handleDeleteRow = async (id: string, record?: any) => {
+    onDeleteRow(id, record);
   };
   const actionColumns: any = {
     dataIndex: "id",
@@ -101,12 +101,16 @@ export default function TableEditable<T>({
       const expanded = expandedRows?.includes(id);
       return (
         <>
-          <Button
-            type="primary"
-            icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-            onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
-            disabled={loading || (isEditing && !record?.isEditable)}
-          />
+          {expandedRowRender && (
+            <Button
+              type="primary"
+              icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
+              onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
+              disabled={
+                loading || !record?.id || (isEditing && !record?.isEditable)
+              }
+            />
+          )}
           <Button
             type="primary"
             icon={
@@ -144,7 +148,7 @@ export default function TableEditable<T>({
               icon={<AiOutlineDelete />}
               disabled={loading || (isEditing && !record?.isEditable)}
               onClick={() => {
-                handleDeleteRow(id);
+                handleDeleteRow(id, record);
               }}
               title="Confirm delete item."
               content="Are you sure you want to delete this item?"

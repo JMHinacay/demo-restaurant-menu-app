@@ -54,24 +54,6 @@ function useFireBase(): FirebaseHookReturnType {
   };
 
   const readData: ReadDataFunction = async (path, callback) => {
-    // setLoading(true);
-    // const dbRef = ref(database);
-    // return get(child(dbRef, path))
-    //   .then((snapshot) => {
-    //     setLoading(false);
-    //     if (snapshot.exists()) {
-    //       if (callback) callback();
-    //       return snapshot.val();
-    //     } else {
-    //       console.log("No data available");
-    //       return null;
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error reading data: ", error);
-    //     setLoading(false);
-    //     throw error;
-    //   });
     setLoading(true);
     return get(query(ref(database, path), orderByChild("name")))
       .then((snapshot) => {
