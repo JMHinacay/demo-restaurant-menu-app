@@ -1,16 +1,21 @@
-import React from "react";
-import Spinner from "./Spinner";
+import React, { ButtonHTMLAttributes } from "react";
 
-function Button(props) {
+interface ButtonProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type"> {
+  type?: "primary" | "danger";
+  dashed?: boolean;
+  fullWidth?: boolean;
+  icon?: React.ReactNode;
+}
+
+function Button({ type = "primary", ...props }: ButtonProps) {
   const colorsMap = {
     primary: "#70b3ff",
     danger: "#d14e45",
   };
 
   const buttonStyle = {
-    backgroundColor: props?.disabled
-      ? "#d6d6d6"
-      : colorsMap[props?.type] || "#70b3ff",
+    backgroundColor: props?.disabled ? "#d6d6d6" : colorsMap[type] || "#70b3ff",
     ...(props?.dashed
       ? {
           border: "1px dashed black",

@@ -32,6 +32,6 @@ export type ColumnT<Type> = {
   dataIndex: string;
   title: string;
   width?: string | number;
-  // render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
+  render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
   renderOptions: RenderOptions;
 };
