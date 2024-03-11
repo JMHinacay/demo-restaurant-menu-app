@@ -1,14 +1,22 @@
+import { RenderOptions } from "@/hooks/useEditableDataSource";
 import { ReactNode } from "react";
 
 export type MenuItem = {
   name: string;
   category: string;
-  options: object[];
+  options: Option[];
   price: number;
   cost: number;
   qty: number;
   id: string | null;
   isEditable?: boolean;
+};
+
+export type Option = {
+  name: string;
+  additionalCost: number;
+  id: string;
+  menuItemId: string;
 };
 export type MenuItemKeys =
   | "name"
@@ -24,5 +32,6 @@ export type ColumnT<Type> = {
   dataIndex: string;
   title: string;
   width?: string | number;
-  render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
+  // render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
+  renderOptions: RenderOptions;
 };

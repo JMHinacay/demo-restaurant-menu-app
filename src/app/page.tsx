@@ -1,54 +1,18 @@
 "use client";
-import Button from "@/components/Button";
-import ButtonWithConfim from "@/components/ButtonWithConfim";
-import Table from "@/components/Table";
-import useEditableDataSource from "@/hooks/useEditableDataSource";
+import TableEditable from "@/components/TableEditable";
 import useFireBase from "@/hooks/useFireBase";
 import { useEffect, useState } from "react";
-import {
-  AiOutlineDelete,
-  AiOutlineEdit,
-  AiOutlineEye,
-  AiOutlineEyeInvisible,
-  AiOutlinePlusCircle,
-  AiOutlineSave,
-} from "react-icons/ai";
-import { MdOutlineCancel } from "react-icons/md";
 import { uuid } from "uuidv4";
-import { ColumnT, MenuItem } from "./types/types";
+import { ColumnT, MenuItem, Option } from "./types/types";
 
 export default function Home() {
   const [readData, writeData, updateData, loading] = useFireBase();
   const [categories, setCategories] = useState<string[]>([]);
-  const [
-    dataSource,
-    setDataSource,
-    {
-      isEditing,
-      setIsEditing,
-      editableCell,
-      setEditableCell,
-      editableRow,
-      render,
-      handleEditRow,
-      handleAddRow,
-    },
-  ] = useEditableDataSource({
-    initialValues,
-    rowChangeCallBack: () => {},
-    categories,
-  });
+  const [dataSource, setDataSource] = useState<MenuItem[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
-  const handleClickExpand = (id: string, type: "open" | "close") => {
-    if (type === "open") setExpandedRows([...expandedRows, id]);
-    else if (type === "close") {
-      setExpandedRows(expandedRows?.filter((item) => item !== id));
-    }
-  };
-  const submitMenuItem = async () => {
-    let data = { ...editableRow };
-    delete data.isEditable;
+  const submitMenuItem = async (rowData: any) => {
+    let data = { ...rowData };
     data.category = removeExtraSpaces(data.category);
     if (data?.id) {
       let obj: any = {};
@@ -62,19 +26,15 @@ export default function Home() {
       });
     }
     fetchMenuItems();
-    setIsEditing(false);
-    setEditableCell(null);
   };
 
-  const handleSaveCell = async () => {
+  const handleSaveMenuItemCell = async (cellData: any) => {
     await writeData<MenuItem>(
-      `menu/items/${editableCell?.id}/${editableCell?.key}`,
-      editableCell?.value,
+      `menu/items/${cellData?.id}/${cellData?.key}`,
+      cellData?.value,
       async () => {
         alert("Menu item successfully saved!");
         fetchMenuItems();
-        setIsEditing(false);
-        setEditableCell(null);
       }
     );
   };
@@ -84,16 +44,36 @@ export default function Home() {
     setDataSource(data);
   };
 
-  const handleCancelEdit = () => {
-    fetchMenuItems();
-    setIsEditing(false);
-  };
   const handleDeleteItem = async (id: string) => {
     await writeData<null>(`menu/items/${id}`, null, () => {
       alert("Menu item successfully deleted!");
       fetchMenuItems();
     });
   };
+
+  const handleSaveOption = async (rowData: any) => {
+    await writeData<any>(
+      `menu/items/${rowData?.menuItemId}/options/${rowData?.id || uuid()}`,
+      rowData,
+      async () => {
+        alert(`Menu item successfully ${rowData?.id ? "update" : "saved"}!`);
+        fetchMenuItems();
+      }
+    );
+  };
+  const handleSaveOptionCell = async (cellData: any) => {
+    await writeData<any>(
+      `menu/items/${cellData?.record?.menuItemId}/options/${
+        cellData?.id || uuid()
+      }/${cellData?.key}`,
+      cellData?.value,
+      async () => {
+        alert(`Menu item successfully ${cellData?.id ? "update" : "saved"}!`);
+        fetchMenuItems();
+      }
+    );
+  };
+  const handleDeleteOption = async (id: string) => {};
   useEffect(() => {
     fetchMenuItems();
   }, []);
@@ -103,132 +83,120 @@ export default function Home() {
     setCategories(arr);
   }, [dataSource]);
 
-  const expandedColumns: ColumnT<any>[] = [
-    // { dataIndex: "", title: "", width: "80%" },
-    { dataIndex: "name", title: "Name" },
-    { dataIndex: "additionalCost", title: "Additional Cost" },
+  const expandedColumns: any = [
+    {
+      dataIndex: "name",
+      title: "Name",
+      renderOptions: {
+        key: "name",
+        inputType: "text",
+      },
+    },
+    {
+      dataIndex: "additionalCost",
+      title: "Additional Cost",
+      renderOptions: {
+        key: "additionalCost",
+        inputType: "number",
+        formatNumber: true,
+      },
+    },
   ];
 
   const columns: ColumnT<MenuItem>[] = [
     {
       dataIndex: "name",
       title: "Name",
-      render: render("name", "text"),
+      renderOptions: {
+        key: "name",
+        inputType: "text",
+      },
     },
     {
       dataIndex: "category",
       title: "Category",
-      render: render("category", "text"),
+      renderOptions: {
+        key: "category",
+        inputType: "text",
+        categories: categories,
+      },
     },
     {
       dataIndex: "price",
       title: "Price",
-      render: render("price", "number", true),
       width: "150px",
+      renderOptions: {
+        key: "price",
+        inputType: "number",
+        formatNumber: true,
+      },
     },
     {
       dataIndex: "cost",
       title: "Cost",
-      render: render("cost", "number", true),
       width: "150px",
+      renderOptions: {
+        key: "cost",
+        inputType: "number",
+        formatNumber: true,
+      },
     },
     {
       dataIndex: "qty",
       title: "Quantity",
-      render: render("qty", "number"),
       width: "150px",
-    },
-    {
-      dataIndex: "id",
-      title: "Actions",
-      width: "170px",
-      render: (id, record) => {
-        const expanded = expandedRows?.includes(id);
-        return (
-          <>
-            <Button
-              type="primary"
-              icon={expanded ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
-              onClick={() => handleClickExpand(id, expanded ? "close" : "open")}
-              disabled={loading || (isEditing && !record?.isEditable)}
-            />
-            <Button
-              type="primary"
-              icon={
-                record?.isEditable || editableCell?.id === id ? (
-                  <AiOutlineSave />
-                ) : (
-                  <AiOutlineEdit />
-                )
-              }
-              onClick={() => {
-                if (record?.isEditable) {
-                  submitMenuItem();
-                } else if (editableCell && editableCell?.id === id) {
-                  handleSaveCell();
-                } else {
-                  handleEditRow(record);
-                }
-              }}
-              disabled={
-                loading ||
-                (isEditing && !record?.isEditable && editableCell?.id !== id)
-              }
-            />
-            {record?.isEditable && (
-              <Button
-                type="danger"
-                icon={<MdOutlineCancel />}
-                onClick={() => handleCancelEdit()}
-                disabled={loading || (isEditing && !record?.isEditable)}
-              />
-            )}
-            {!record?.isEditable && (
-              <ButtonWithConfim
-                type="danger"
-                icon={<AiOutlineDelete />}
-                disabled={loading || (isEditing && !record?.isEditable)}
-                onClick={() => {
-                  handleDeleteItem(id);
-                }}
-                title="Confirm delete item."
-                content="Are you sure you want to delete this item?"
-              />
-            )}
-          </>
-        );
+      renderOptions: {
+        key: "qty",
+        inputType: "number",
       },
     },
   ];
   return (
     <main className="flex min-h-screen flex-col  justify-between p-10">
       <div>
-        <Table
+        <div className="text-xl font-bold mb-10">Restaurant Menu</div>
+
+        <TableEditable
+          initialValues={initialValues}
           dataSource={dataSource}
           columns={columns}
           expandedRows={expandedRows}
+          addButtonText="New Menu Item"
+          onSaveRow={submitMenuItem}
+          onSaveCell={handleSaveMenuItemCell}
+          onDeleteRow={handleDeleteItem}
           expandedRowRender={(record: MenuItem) => {
             return (
-              <>
+              <div className="ml-[50px]">
                 <div className="font-bold"> {record?.name} Options</div>
-                <Table
+                <TableEditable
+                  initialValues={{
+                    name: "",
+                    additionalCost: 0,
+                    menuItemId: record?.id,
+                  }}
                   columns={expandedColumns}
-                  dataSource={record?.options || []}
+                  dataSource={
+                    record?.options
+                      ? Object?.keys(record?.options).map((key) => ({
+                          ...(record.options[
+                            key as keyof typeof record.options
+                          ] as Option),
+                          menuItemId: record?.id,
+                          id: key,
+                        }))
+                      : []
+                  }
+                  addButtonText={`New ${record?.name} Option`}
+                  onSaveRow={handleSaveOption}
+                  onSaveCell={handleSaveOptionCell}
+                  onDeleteRow={handleDeleteOption}
                 />
-              </>
+              </div>
             );
           }}
           loading={loading}
         />
-        <Button
-          disabled={isEditing}
-          dashed
-          onClick={() => handleAddRow()}
-          fullWidth
-          icon={<AiOutlinePlusCircle />}
-        >
-          Add Item
-        </Button>
       </div>
     </main>
   );

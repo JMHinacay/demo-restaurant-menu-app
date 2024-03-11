@@ -10,19 +10,24 @@ type RowChangeCallBackT = (value: string | number, key: string) => void;
 interface UseEditableDataSourceT {
   initialValues: MenuItem;
   rowChangeCallBack: RowChangeCallBackT;
-  categories: string[];
 }
 
 interface EditableCellT {
   id: string;
   key: string;
   value: any;
+  record: object;
+}
+export interface RenderOptions {
+  key: MenuItemKeys;
+  inputType: string;
+  formatNumber?: boolean;
+  categories?: string[];
 }
 
 function useEditableDataSource({
   initialValues,
   rowChangeCallBack,
-  categories,
 }: UseEditableDataSourceT): [
   MenuItem[],
   (data: MenuItem[]) => void,
@@ -33,11 +38,7 @@ function useEditableDataSource({
     setEditableCell: (cell: EditableCellT | null) => void;
     editableRow: MenuItem;
     setEditableRow: (row: MenuItem) => void;
-    render: (
-      key: MenuItemKeys,
-      inputType: string,
-      formatNumber?: boolean
-    ) => any;
+    render: (options: RenderOptions) => any;
     handleEditRow: (record: MenuItem) => void;
     handleAddRow: () => void;
     handleChange: RowChangeCallBackT;
@@ -79,19 +80,24 @@ function useEditableDataSource({
     setIsEditing(true);
   };
 
-  const handleClickCell = (id: string, key: string, value: any) => {
+  const handleClickCell = (
+    id: string,
+    key: string,
+    value: any,
+    record: object
+  ) => {
+    console.log({ id, key, value });
     if (!editableCell && !isEditing) {
       setIsEditing(true);
-
-      setEditableCell({ id, key, value });
+      setEditableCell({ id, key, value, record });
     }
   };
-
-  const render = (
-    key: MenuItemKeys,
-    inputType: string,
-    formatNumber?: boolean
-  ) => {
+  const render = ({
+    key,
+    inputType,
+    formatNumber,
+    categories,
+  }: RenderOptions) => {
     const func = (val: string | number, record: any) => {
       let isEditable =
         record?.isEditable ||
@@ -99,7 +105,11 @@ function useEditableDataSource({
 
       if (!isEditable)
         return (
-          <div onClick={() => handleClickCell(record.id as string, key, val)}>
+          <div
+            onClick={() =>
+              handleClickCell(record.id as string, key, val, record)
+            }
+          >
             {formatNumber && inputType === "number" ? (
               <NumeralFormatter withPesos={true} value={val} />
             ) : (
