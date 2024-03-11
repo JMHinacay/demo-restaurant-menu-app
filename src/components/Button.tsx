@@ -34,7 +34,7 @@ function Button({ type = "primary", ...props }: ButtonProps) {
     <button
       style={buttonStyle}
       className={
-        "hover:bg-blue-700 text-white font-bold py-1 px-2 rounded m-[2px] "
+        "hover:bg-blue-700 text-white font-bold py-1 px-1 rounded m-[2px] "
       }
       {...props}
     >

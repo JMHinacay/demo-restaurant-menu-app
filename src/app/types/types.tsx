@@ -17,6 +17,7 @@ export type Option = {
   additionalCost: number;
   id: string;
   menuItemId: string;
+  isEditable?: boolean;
 };
 export type MenuItemKeys =
   | "name"
@@ -33,5 +34,5 @@ export type ColumnT<Type> = {
   title: string;
   width?: string | number;
   render?: (value: string, record: Type, boolean?: boolean) => ReactNode;
-  renderOptions: RenderOptions;
+  renderOptions: RenderOptions<Type>;
 };

@@ -9,7 +9,6 @@ export default function Home() {
   const [readData, writeData, updateData, loading] = useFireBase();
   const [categories, setCategories] = useState<string[]>([]);
   const [dataSource, setDataSource] = useState<MenuItem[]>([]);
-  const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
   const submitMenuItem = async (rowData: any) => {
     let data = { ...rowData };
@@ -83,7 +82,7 @@ export default function Home() {
     setCategories(arr);
   }, [dataSource]);
 
-  const expandedColumns: any = [
+  const expandedColumns: ColumnT<Option>[] = [
     {
       dataIndex: "name",
       title: "Name",
@@ -160,7 +159,6 @@ export default function Home() {
           initialValues={initialValues}
           dataSource={dataSource}
           columns={columns}
-          expandedRows={expandedRows}
           addButtonText="New Menu Item"
           onSaveRow={submitMenuItem}
           onSaveCell={handleSaveMenuItemCell}
@@ -191,6 +189,8 @@ export default function Home() {
                   onSaveRow={handleSaveOption}
                   onSaveCell={handleSaveOptionCell}
                   onDeleteRow={handleDeleteOption}
+                  loading={false}
+                  expandedRowRender={undefined}
                 />
               </div>
             );

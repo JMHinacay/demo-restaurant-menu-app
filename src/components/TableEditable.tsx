@@ -1,9 +1,10 @@
-"use client";
+import { useEffect, useState } from "react";
 import Button from "@/components/Button";
 import ButtonWithConfim from "@/components/ButtonWithConfim";
 import Table from "@/components/Table";
-import useEditableDataSource from "@/hooks/useEditableDataSource";
-import { useEffect, useState } from "react";
+import useEditableDataSource, {
+  RenderOptions,
+} from "@/hooks/useEditableDataSource";
 import {
   AiOutlineDelete,
   AiOutlineEdit,
@@ -14,7 +15,20 @@ import {
 } from "react-icons/ai";
 import { MdOutlineCancel } from "react-icons/md";
 
-export default function TableEditable({
+interface TableEditableProps<T> {
+  onSaveRow: (data: T) => void;
+  onSaveCell: (cell: any) => void;
+  onDeleteRow: (id: string) => void;
+  handleCancelEdit?: () => void;
+  dataSource: T[];
+  columns: any[];
+  loading: boolean;
+  expandedRowRender: any;
+  initialValues: T;
+  addButtonText?: string;
+}
+
+export default function TableEditable<T>({
   onSaveRow,
   onSaveCell,
   onDeleteRow,
@@ -25,7 +39,7 @@ export default function TableEditable({
   expandedRowRender,
   initialValues,
   addButtonText = "Add Row",
-}: any) {
+}: TableEditableProps<T>) {
   const [
     dataSource,
     setDataSource,
@@ -39,7 +53,7 @@ export default function TableEditable({
       handleEditRow,
       handleAddRow,
     },
-  ] = useEditableDataSource({
+  ] = useEditableDataSource<T>({
     initialValues,
     rowChangeCallBack: () => {},
   });
@@ -60,7 +74,6 @@ export default function TableEditable({
 
   const handleSaveRow = async () => {
     let data = { ...editableRow };
-    delete data.isEditable;
     onSaveRow(data);
     setIsEditing(false);
     setEditableCell(null);
@@ -85,7 +98,7 @@ export default function TableEditable({
   const actionColumns: any = {
     dataIndex: "id",
     title: "Actions",
-    width: "170px",
+    width: "105px",
     render: (id: any, record: any) => {
       const expanded = expandedRows?.includes(id);
       return (
