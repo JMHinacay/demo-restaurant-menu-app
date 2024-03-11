@@ -34,10 +34,6 @@ export default function Home() {
     );
   };
 
-  useEffect(
-    () => handleSearch(),
-    [filters.search, filters.categories, dataSource]
-  );
   const submitMenuItem = async (rowData: any) => {
     let data = { ...rowData };
     data.category = removeExtraSpaces(data.category);
@@ -110,7 +106,10 @@ export default function Home() {
     const arr = Array.from(new Set(dataSource?.map((item) => item.category)));
     setCategories(arr);
   }, [dataSource]);
-
+  useEffect(
+    () => handleSearch(),
+    [filters.search, filters.categories, dataSource]
+  );
   const expandedColumns: ColumnT<Option>[] = [
     {
       dataIndex: "name",
@@ -184,7 +183,7 @@ export default function Home() {
       <div>
         <div className="text-xl font-bold mb-10">Restaurant Menu</div>
         <div className="flex">
-          <div className="mb-4 mr-2">Search:</div>
+          <div className="mb-4 mr-2 relative top-[2px]">Search:</div>
           <Input
             onChange={(e) => {
               console.log(e.target.value);
@@ -192,7 +191,7 @@ export default function Home() {
             }}
           />
 
-          <div className="mb-4 mr-2 ml-10">Categories:</div>
+          <div className="mb-4 mr-2 ml-10 relative top-[2px]">Categories:</div>
           <Select
             options={categories}
             onChange={(value: string[]) => {
